@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('amanoticias-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AmaNotícias — Notícias em tempo real</title>
+  <meta name="description" content="AmaNotícias reúne notícias em tempo real de várias fontes em um portal jornalístico simples e direto.">
+  <meta property="og:title" content="AmaNotícias — Notícias em tempo real">
+  <meta property="og:description" content="Notícias de várias fontes brasileiras, reunidas em um só lugar, com um assistente de IA para ajudar você a entender o que está acontecendo.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#5b5fef">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="app">
+    <header class="masthead">
+      <div class="masthead-top">
+        <span class="masthead-date" id="current-date">carregando data...</span>
+        <span class="masthead-edition">
+          <span class="live-dot" aria-hidden="true"></span>
+          Edição digital · Ao vivo
+        </span>
+      </div>
+
+      <button
+        type="button"
+        id="theme-toggle-btn"
+        class="theme-toggle-btn"
+        aria-pressed="false"
+        aria-label="Alternar para modo escuro"
+      >
+        <span class="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true">☀</span>
+        <span class="theme-toggle-icon theme-toggle-icon-moon" aria-hidden="true">☾</span>
+      </button>
+
+      <div class="masthead-hero">
+        <div class="masthead-copy">
+          <h1 class="masthead-title">AmaNotícias</h1>
+          <p class="masthead-tagline">Notícias em tempo real, reunidas de várias fontes.</p>
+
+          <form class="masthead-search" id="search-form" role="search">
+            <label for="search-input" class="visually-hidden">Buscar notícias</label>
+            <input
+              type="search"
+              id="search-input"
+              name="q"
+              placeholder="Buscar por tema, país, empresa..."
+              autocomplete="off"
+            >
+            <button type="submit" id="search-btn">Buscar</button>
+          </form>
+        </div>
+
+        <div class="masthead-globe" id="hero-globe" aria-hidden="true"></div>
+      </div>
+    </header>
+
+    <nav class="category-nav" aria-label="Categorias de notícias">
+      <ul class="category-list" id="category-list">
+        <li><button class="category-btn is-active" data-category="general" type="button">Principais</button></li>
+        <li><button class="category-btn" data-category="technology" type="button">Tecnologia</button></li>
+        <li><button class="category-btn" data-category="business" type="button">Economia</button></li>
+        <li><button class="category-btn" data-category="sports" type="button">Esportes</button></li>
+        <li><button class="category-btn" data-category="health" type="button">Saúde</button></li>
+        <li><button class="category-btn" data-category="science" type="button">Ciência</button></li>
+        <li><button class="category-btn" data-category="entertainment" type="button">Cultura</button></li>
+      </ul>
+    </nav>
+
+    <main id="main-content">
+      <section class="featured-story" id="featured-story" aria-labelledby="featured-heading">
+        <h2 id="featured-heading" class="visually-hidden">Manchete principal</h2>
+        <div class="featured-content" id="featured-content" hidden></div>
+      </section>
+
+      <div class="feed-error" id="feed-error" role="alert" hidden>
+        <p id="feed-error-text">Não foi possível carregar as notícias agora.</p>
+        <button type="button" id="feed-retry-btn">Tentar novamente</button>
+      </div>
+
+      <section class="news-feed" aria-labelledby="feed-heading">
+        <div class="news-feed-header">
+          <h2 id="feed-heading">Últimas notícias</h2>
+          <span class="feed-count" id="feed-count"></span>
+        </div>
+
+        <div class="news-grid" id="news-grid"></div>
+
+        <div class="feed-empty" id="feed-empty" hidden>
+          <p>Nenhuma notícia encontrada para essa busca ou categoria.</p>
+        </div>
+
+        <button type="button" class="load-more-btn" id="load-more-btn" hidden>
+          Carregar mais notícias
+        </button>
+      </section>
+
+      <section class="newsletter" aria-labelledby="newsletter-heading">
+        <div class="newsletter-inner">
+          <div class="newsletter-copy">
+            <h2 id="newsletter-heading">Não perca as próximas edições</h2>
+            <p>Deixe seu e-mail e a gente avisa quando tiver novidades no AmaNotícias.</p>
+          </div>
+          <form class="newsletter-form" id="newsletter-form">
+            <label for="newsletter-email" class="visually-hidden">Seu e-mail</label>
+            <input
+              type="email"
+              id="newsletter-email"
+              name="email"
+              placeholder="seuemail@exemplo.com"
+              autocomplete="email"
+              required
+            >
+            <button type="submit">Quero receber</button>
+          </form>
+        </div>
+        <p class="newsletter-feedback" id="newsletter-feedback" role="status" aria-live="polite" hidden></p>
+      </section>
+
+      <section class="reader-board" aria-labelledby="reader-board-heading">
+        <div class="reader-board-header">
+          <h2 id="reader-board-heading">Mural dos leitores</h2>
+          <span class="reader-board-date" id="reader-board-date"></span>
+        </div>
+        <p class="reader-board-intro">O que vocês estão achando das notícias de hoje? O mural é reiniciado a cada dia.</p>
+
+        <form class="reader-board-form" id="reader-board-form">
+          <label for="reader-board-name" class="visually-hidden">Seu nome (opcional)</label>
+          <input
+            type="text"
+            id="reader-board-name"
+            placeholder="Seu nome (opcional)"
+            maxlength="40"
+            autocomplete="name"
+          >
+          <label for="reader-board-text" class="visually-hidden">Seu comentário</label>
+          <textarea
+            id="reader-board-text"
+            placeholder="Deixe um comentário sobre as notícias de hoje..."
+            maxlength="500"
+            required
+          ></textarea>
+          <button type="submit">Comentar</button>
+        </form>
+
+        <ul class="reader-board-list" id="reader-board-list" aria-live="polite"></ul>
+        <p class="reader-board-empty" id="reader-board-empty" hidden>Seja o primeiro a comentar hoje.</p>
+      </section>
+    </main>
+
+    <aside class="chatbot" id="chatbot" aria-label="Assistente de notícias">
+      <button type="button" class="chatbot-toggle" id="chatbot-toggle" aria-expanded="false">
+        <span aria-hidden="true">✦</span> Assistente de notícias
+      </button>
+      <div class="chatbot-panel" id="chatbot-panel" hidden>
+        <div class="chatbot-header">
+          <div class="chatbot-header-title">
+            <strong>Assistente de notícias</strong>
+            <span class="chatbot-status" id="chatbot-status">verificando IA...</span>
+          </div>
+          <div class="chatbot-header-actions">
+            <button type="button" id="chatbot-clear" aria-label="Limpar conversa" title="Limpar conversa">↺</button>
+            <button type="button" id="chatbot-close" aria-label="Fechar assistente">×</button>
+          </div>
+        </div>
+        <div class="chatbot-messages" id="chatbot-messages" aria-live="polite">
+          <p class="chatbot-message chatbot-message-bot">
+            Olá! Posso responder perguntas e ajudar você a encontrar notícias. O que você quer saber?
+          </p>
+        </div>
+        <div class="chatbot-suggestions" id="chatbot-suggestions"></div>
+        <form class="chatbot-form" id="chatbot-form">
+          <label for="chatbot-input" class="visually-hidden">Mensagem para o assistente</label>
+          <input id="chatbot-input" type="text" maxlength="1000" placeholder="Pergunte sobre uma notícia..." autocomplete="off">
+          <button type="submit">Enviar</button>
+        </form>
+      </div>
+    </aside>
+
+    <footer class="site-footer">
+      <p>
+        O AmaNotícias reúne notícias de diversas fontes. As opiniões e fatos pertencem às
+        fontes originais — sempre confira a matéria completa antes de compartilhar.
+      </p>
+      <p class="footer-credits">
+        Projeto demonstrativo full-stack: HTML, CSS, JavaScript no front-end e Python (Flask)
+        no back-end.
+      </p>
+    </footer>
+  </div>
+
+  <template id="news-card-template">
+    <article class="news-card">
+      <div class="news-card-image-wrap">
+        <img class="news-card-image" src="" alt="" loading="lazy">
+        <span class="news-card-category"></span>
+      </div>
+      <div class="news-card-body">
+        <h3 class="news-card-title"></h3>
+        <p class="news-card-summary"></p>
+        <div class="news-card-meta">
+          <span class="news-card-source"></span>
+          <span class="news-card-time"></span>
+        </div>
+        <div class="news-card-actions">
+          <a class="news-card-link" href="#" target="_blank" rel="noopener noreferrer">Ler notícia completa</a>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <template id="skeleton-card-template">
+    <article class="news-card news-card-skeleton" aria-hidden="true">
+      <div class="skeleton skeleton-image"></div>
+      <div class="news-card-body">
+        <div class="skeleton skeleton-line skeleton-line-title"></div>
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton skeleton-line skeleton-line-short"></div>
+        <div class="skeleton skeleton-line skeleton-line-meta"></div>
+      </div>
+    </article>
+  </template>
+
+  <template id="featured-template">
+    <div class="featured-inner">
+      <div class="featured-image-wrap">
+        <img class="featured-image" src="" alt="" loading="lazy">
+      </div>
+      <div class="featured-text">
+        <span class="featured-tag">Manchete de agora</span>
+        <h3 class="featured-title"></h3>
+        <p class="featured-summary"></p>
+        <div class="featured-meta">
+          <span class="featured-source"></span>
+          <span class="featured-time"></span>
+        </div>
+        <div class="featured-actions">
+          <a class="featured-link" href="#" target="_blank" rel="noopener noreferrer">Ler matéria completa</a>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+  <script src="globe.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
