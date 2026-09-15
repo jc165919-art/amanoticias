@@ -58,7 +58,7 @@ def index():
 
 @app.route("/<path:filename>", methods=["GET"])
 def serve_asset(filename):
-    if filename in {"index.html", "style.css", "script.js", "globe.js"}:
+    if filename in {"index.html", "style.css", "script.js", "Globe.js", "globe.js"}:
         return send_from_directory(BASE_DIR, filename)
     return "Not Found", 404
 
